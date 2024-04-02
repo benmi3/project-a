@@ -78,3 +78,13 @@ pub async fn seed_tasks(
 
 	Ok(tasks)
 }
+
+pub async fn seed_timerecords(
+	ctx: &Ctx,
+	mm: &ModelManager,
+	project_id: i64,
+	titles: &[&str],
+) -> model::Result<Vec<TimeRecord>> {
+    // TODO
+	Ok(TimeRecord)
+}
