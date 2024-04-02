@@ -53,6 +53,27 @@ async fn main() -> Result<()> {
 		task_ids.push(result.json_value::<i64>("/result/id")?);
 	}
 
+	let mut timerecord_ids: Vec<i64> = Vec::new();
+	for i in 1..=5 {
+		let req_create_timerecords = hc.do_post(
+			"/api/rpc",
+			json!({
+				"id": 1,
+				"method": "create_timerecord",
+				"params": {
+					"data": {
+						"project_id": project_id,
+						"start_time": "2024-04-02T13:29:30.0",
+						"stop_time": "2024-04-02T14:30:30.0",
+						"place": format!("place AAA {i}")
+					}
+				}
+			}),
+		);
+		let result = req_create_timerecords.await?;
+		timerecord_ids.push(result.json_value::<i64>("/result/id")?);
+	}
+
 	let req_update_task = hc.do_post(
 		"/api/rpc",
 		json!({
