@@ -4,6 +4,9 @@ I want to expand my knowledge of both rust and general software design.
 This is why I chose to use an app blue print from [rust10x](https://rust10x.com/web-app).
 This is a blue print for production level application, so I hope that working with this will help expanding my knowledge for software design.
 
+## Current State
+![Rust workflow](https://github.com/benmi3/project-a/actions/workflows/rust.yml/badge.svg)
+
 ## The goal for this project
 
 ### Projects
