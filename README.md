@@ -1,3 +1,43 @@
+# Time keeping thingy currently named project-a
+
+I want to expand my knowledge of both rust and general software design.
+This is why I chose to use an app blue print from [rust10x](https://rust10x.com/web-app).
+This is a blue print for production level application, so I hope that working with this will help expanding my knowledge for software design.
+
+## The goal for this project
+
+### Projects
+
+I want to try to track my time use, devided up in projects.
+One project might be as an example, general work at x workplace, or this project at this workplace.
+
+### Time Records
+
+I want to then add timerecords of what I did where. I named to place for now, but I would at travel to x workplace when travling back and forth.
+
+### Tasks
+
+I want to add all tasks I did.
+
+### Task Progress
+
+From 0-100, adding a prosentage to each task for when I did what. 
+My main focus is not how fast I did the task, but rather progress went.
+The reason for this is to see later, if I see that progress is slow on x type of thing, maybe I need to learn more about it,
+or find a better way to do x type of thing.
+
+## Contributions
+
+Feel free to open pull requests, or create Issues of feature requests. 
+The main goal is to learn on the way, so getting some guidance on the way is appreciated.
+
+
+
+
+
+
+---
+
 # Rust10x Web App Blueprint for Production Coding
 
 More info at: https://rust10x.com/web-app
