@@ -25,6 +25,7 @@ pub mod modql_utils;
 pub mod project;
 mod store;
 pub mod task;
+pub mod timerecord;
 pub mod user;
 
 pub use self::error::{Error, Result};
