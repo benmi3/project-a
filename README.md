@@ -34,8 +34,11 @@ or find a better way to do x type of thing.
 Feel free to open pull requests, or create Issues of feature requests. 
 The main goal is to learn on the way, so getting some guidance on the way is appreciated.
 
+---
 
-
+# project-a-front
+- [turi getting started](https://tauri.app/v1/guides/getting-started/setup/next-js)
+- [bun quicksart](https://bun.sh/docs/quickstart)
 
 
 
