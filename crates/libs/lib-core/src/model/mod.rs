@@ -27,6 +27,7 @@ mod store;
 pub mod task;
 pub mod timerecord;
 pub mod user;
+pub mod taskprogress;
 
 pub use self::error::{Error, Result};
 
