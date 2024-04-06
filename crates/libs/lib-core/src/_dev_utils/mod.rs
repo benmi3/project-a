@@ -5,6 +5,7 @@ mod dev_db;
 use crate::ctx::Ctx;
 use crate::model::project::{ProjectBmc, ProjectForCreate};
 use crate::model::task::{Task, TaskBmc, TaskForCreate};
+use crate::model::taskprogress::{TaskProgress, TaskProgressBmc, TaskProgressForCreate};
 use crate::model::timerecord::{TimeRecord, TimeRecordBmc, TimeRecordForCreate};
 use crate::model::{self, ModelManager};
 use tokio::sync::OnceCell;
@@ -81,6 +82,24 @@ pub async fn seed_tasks(
 	Ok(tasks)
 }
 
+pub async fn seed_task(
+	ctx: &Ctx,
+	mm: &ModelManager,
+	project_id: i64,
+	title: &str,
+) -> model::Result<i64> {
+	let id = TaskBmc::create(
+		ctx,
+		mm,
+		TaskForCreate {
+			project_id,
+			title: title.to_string(),
+		},
+	)
+	.await?;
+	Ok(id)
+}
+
 pub async fn seed_timerecords(
 	ctx: &Ctx,
 	mm: &ModelManager,
@@ -107,4 +126,30 @@ pub async fn seed_timerecords(
 	}
 
 	Ok(timerecords)
+}
+
+pub async fn seed_taskprogresses(
+	ctx: &Ctx,
+	mm: &ModelManager,
+	task_id: i64,
+	progresses: &[i32],
+) -> model::Result<Vec<TaskProgress>> {
+	let mut taskprogresses = Vec::new();
+
+	for progress in progresses {
+		let id = TaskProgressBmc::create(
+			ctx,
+			mm,
+			TaskProgressForCreate {
+				task_id,
+				progress: *progress,
+			},
+		)
+		.await?;
+		let taskprogress = TaskProgressBmc::get(ctx, mm, id).await?;
+
+		taskprogresses.push(taskprogress);
+	}
+
+	Ok(taskprogresses)
 }

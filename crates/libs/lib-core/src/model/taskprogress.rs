@@ -12,7 +12,6 @@ use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use sqlx::types::time::OffsetDateTime;
 use sqlx::FromRow;
-use crate::model::task::{TaskBmc, TaskFilter, TaskForCreate, TaskForUpdate};
 
 // region:    --- Task Types
 #[serde_as]
@@ -125,24 +124,28 @@ mod tests {
 		// -- Setup & Fixtures
 		let mm = _dev_utils::init_test().await;
 		let ctx = Ctx::root_ctx();
-		let fx_title = "test_create_ok title";
+		let fx_progress = 45;
 		let fx_project_id =
 			_dev_utils::seed_project(&ctx, &mm, "test_create_ok project for task ")
 				.await?;
+		let fx_task_id = 
+			_dev_utils::seed_task(&ctx, &mm, fx_project_id, "test_create_ok task for taskprogress")
+				.await?;
+
 
 		// -- Exec
-		let task_c = TaskForCreate {
-			project_id: fx_project_id,
-			title: fx_title.to_string(),
+		let taskprogress_c = TaskProgressForCreate {
+			task_id: fx_task_id,
+			progress: fx_progress,
 		};
-		let id = TaskBmc::create(&ctx, &mm, task_c).await?;
+		let id = TaskProgressBmc::create(&ctx, &mm, taskprogress_c).await?;
 
 		// -- Check
-		let task = TaskBmc::get(&ctx, &mm, id).await?;
-		assert_eq!(task.title, fx_title);
+		let taskprogress = TaskProgressBmc::get(&ctx, &mm, id).await?;
+		assert_eq!(taskprogress.progress, fx_progress);
 
 		// -- Clean
-		TaskBmc::delete(&ctx, &mm, id).await?;
+		TaskProgressBmc::delete(&ctx, &mm, id).await?;
 
 		Ok(())
 	}
@@ -156,14 +159,14 @@ mod tests {
 		let fx_id = 100;
 
 		// -- Exec
-		let res = TaskBmc::get(&ctx, &mm, fx_id).await;
+		let res = TaskProgressBmc::get(&ctx, &mm, fx_id).await;
 
 		// -- Check
 		assert!(
 			matches!(
 				res,
 				Err(Error::EntityNotFound {
-					entity: "task",
+					entity: "taskprogress",
 					id: 100
 				})
 			),
@@ -179,21 +182,25 @@ mod tests {
 		// -- Setup & Fixtures
 		let mm = _dev_utils::init_test().await;
 		let ctx = Ctx::root_ctx();
-		let fx_titles = &["test_list_all_ok-task 01", "test_list_all_ok-task 02"];
+		let fx_taskprogress_progress = &[15,55,80];
 		let fx_project_id =
 			_dev_utils::seed_project(&ctx, &mm, "test_list_all_ok project for task")
 				.await?;
-		_dev_utils::seed_tasks(&ctx, &mm, fx_project_id, fx_titles).await?;
+		let fx_task_id = 
+			_dev_utils::seed_task(&ctx, &mm, fx_project_id, "test_list_all_ok task for taskprogress")
+				.await?;
+		_dev_utils::seed_taskprogresses(&ctx, &mm, fx_task_id, fx_taskprogress_progress)
+				.await?;
 
 		// -- Exec
-		let filter = TaskFilter {
-			project_id: Some(fx_project_id.into()),
+		let filter = TaskProgressFilter {
+			task_id: Some(fx_task_id.into()),
 			..Default::default()
 		};
-		let tasks = TaskBmc::list(&ctx, &mm, Some(vec![filter]), None).await?;
+		let taskprogresses = TaskProgressBmc::list(&ctx, &mm, Some(vec![filter]), None).await?;
 
 		// -- Check
-		assert_eq!(tasks.len(), 2, "number of seeded tasks.");
+		assert_eq!(taskprogresses.len(), 3, "number of seeded taskprogresses.");
 
 		// -- Clean
 		ProjectBmc::delete(&ctx, &mm, fx_project_id).await?;
