@@ -63,7 +63,7 @@ pub struct TaskProgressFilter {
 pub struct TaskProgressBmc;
 
 impl DbBmc for TaskProgressBmc {
-	const TABLE: &'static str = "task";
+	const TABLE: &'static str = "taskprogress";
 }
 
 impl TaskProgressBmc {
@@ -214,28 +214,25 @@ mod tests {
 		// -- Setup & Fixtures
 		let mm = _dev_utils::init_test().await;
 		let ctx = Ctx::root_ctx();
-		let fx_titles = &[
-			"test_list_by_title_contains_ok 01",
-			"test_list_by_title_contains_ok 02.1",
-			"test_list_by_title_contains_ok 02.2",
-		];
 		let fx_project_id = _dev_utils::seed_project(
 			&ctx,
 			&mm,
 			"test_list_by_title_contains_ok project for task ",
 		)
 			.await?;
-		_dev_utils::seed_tasks(&ctx, &mm, fx_project_id, fx_titles).await?;
+		let fx_task_id = 
+			_dev_utils::seed_task(&ctx, &mm, fx_project_id, "test_list_all_ok task for taskprogress")
+				.await?;
 
 		// -- Exec
-		let filter = TaskFilter {
-			project_id: Some(fx_project_id.into()),
-			title: Some(
-				OpValString::Contains("by_title_contains_ok 02".to_string()).into(),
+		let filter = TaskProgressFilter {
+			task_id: Some(fx_project_id.into()),
+			progress: Some(
+				OpValsInt32::Contains("3").into(),
 			),
 			..Default::default()
 		};
-		let tasks = TaskBmc::list(&ctx, &mm, Some(vec![filter]), None).await?;
+		let tasks = TaskProgressBmc::list(&ctx, &mm, Some(vec![filter]), None).await?;
 
 		// -- Check
 		assert_eq!(tasks.len(), 2);
