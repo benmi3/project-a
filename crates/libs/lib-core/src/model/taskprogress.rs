@@ -112,7 +112,6 @@ mod tests {
 	use crate::model::Error;
 	use anyhow::Result;
 	use lib_utils::time::{format_time, now_utc};
-	use modql::filter::OpValString;
 	use serde_json::json;
 	use serial_test::serial;
 	use std::time::Duration;
@@ -128,10 +127,13 @@ mod tests {
 		let fx_project_id =
 			_dev_utils::seed_project(&ctx, &mm, "test_create_ok project for task ")
 				.await?;
-		let fx_task_id = 
-			_dev_utils::seed_task(&ctx, &mm, fx_project_id, "test_create_ok task for taskprogress")
-				.await?;
-
+		let fx_task_id = _dev_utils::seed_task(
+			&ctx,
+			&mm,
+			fx_project_id,
+			"test_create_ok task for taskprogress",
+		)
+		.await?;
 
 		// -- Exec
 		let taskprogress_c = TaskProgressForCreate {
@@ -182,22 +184,32 @@ mod tests {
 		// -- Setup & Fixtures
 		let mm = _dev_utils::init_test().await;
 		let ctx = Ctx::root_ctx();
-		let fx_taskprogress_progress = &[15,55,80];
+		let fx_taskprogress_progress = &[15, 55, 80];
 		let fx_project_id =
 			_dev_utils::seed_project(&ctx, &mm, "test_list_all_ok project for task")
 				.await?;
-		let fx_task_id = 
-			_dev_utils::seed_task(&ctx, &mm, fx_project_id, "test_list_all_ok task for taskprogress")
-				.await?;
-		_dev_utils::seed_taskprogresses(&ctx, &mm, fx_task_id, fx_taskprogress_progress)
-				.await?;
+		let fx_task_id = _dev_utils::seed_task(
+			&ctx,
+			&mm,
+			fx_project_id,
+			"test_list_all_ok task for taskprogress",
+		)
+		.await?;
+		_dev_utils::seed_taskprogresses(
+			&ctx,
+			&mm,
+			fx_task_id,
+			fx_taskprogress_progress,
+		)
+		.await?;
 
 		// -- Exec
 		let filter = TaskProgressFilter {
 			task_id: Some(fx_task_id.into()),
 			..Default::default()
 		};
-		let taskprogresses = TaskProgressBmc::list(&ctx, &mm, Some(vec![filter]), None).await?;
+		let taskprogresses =
+			TaskProgressBmc::list(&ctx, &mm, Some(vec![filter]), None).await?;
 
 		// -- Check
 		assert_eq!(taskprogresses.len(), 3, "number of seeded taskprogresses.");
@@ -219,23 +231,27 @@ mod tests {
 			&mm,
 			"test_list_by_title_contains_ok project for task ",
 		)
-			.await?;
-		let fx_task_id = 
-			_dev_utils::seed_task(&ctx, &mm, fx_project_id, "test_list_all_ok task for taskprogress")
-				.await?;
+		.await?;
+		let fx_task_id = _dev_utils::seed_task(
+			&ctx,
+			&mm,
+			fx_project_id,
+			"test_list_all_ok task for taskprogress",
+		)
+		.await?;
+
+		_dev_utils::seed_taskprogresses(&ctx, &mm, fx_task_id, &[3, 50, 60]).await?;
 
 		// -- Exec
 		let filter = TaskProgressFilter {
-			task_id: Some(fx_project_id.into()),
-			progress: Some(
-				OpValsInt32::Contains("3").into(),
-			),
+			task_id: Some(fx_task_id.into()),
 			..Default::default()
 		};
-		let tasks = TaskProgressBmc::list(&ctx, &mm, Some(vec![filter]), None).await?;
+		let taskprogresses =
+			TaskProgressBmc::list(&ctx, &mm, Some(vec![filter]), None).await?;
 
 		// -- Check
-		assert_eq!(tasks.len(), 2);
+		assert_eq!(taskprogresses.len(), 3);
 
 		// -- Cleanup
 		ProjectBmc::delete(&ctx, &mm, fx_project_id).await?;
@@ -259,34 +275,41 @@ mod tests {
 			&mm,
 			"test_list_with_list_options_ok project for task ",
 		)
-			.await?;
+		.await?;
 		_dev_utils::seed_tasks(&ctx, &mm, fx_project_id, fx_titles).await?;
-		let fx_task_ids = _dev_utils::seed_tasks(&ctx, &mm, fx_project_id, fx_titles).await?;
+		let fx_tasks =
+			_dev_utils::seed_tasks(&ctx, &mm, fx_project_id, fx_titles).await?;
 
-		// -- Exec
-		let filter: TaskProgressFilter = TaskProgressFilter {
-			task_id: Some(fx_task_id.into()),
-			..Default::default()
-		};
-		let list_options: ListOptions = serde_json::from_value(json! ({
-			"offset": 0,
-			"limit": 2,
-			"order_bys": "!title"
-		}))?;
-		let tasks =
-			TaskProgressBmc::list(&ctx, &mm, Some(vec![filter]), Some(list_options)).await?;
-			
-		// -- Check
-		let titles: Vec<String> =
-			tasks.iter().map(|t| t.title.to_string()).collect();
-		assert_eq!(titles.len(), 2);
-		assert_eq!(
-			&titles,
-			&[
-				"test_list_with_list_options_ok 02.2",
-				"test_list_with_list_options_ok 02.1"
-			]
-		);
+		// -- Iterate
+		for fx_task in fx_tasks {
+			// -- Exec
+
+			_dev_utils::seed_taskprogresses(&ctx, &mm, fx_task.id, &[10, 50, 90])
+				.await?;
+
+			let filter: TaskProgressFilter = TaskProgressFilter {
+				task_id: Some(OpValsInt64::into(fx_task.id.into())),
+				..Default::default()
+			};
+			let list_options: ListOptions = serde_json::from_value(json! ({
+				"offset": 0,
+				"limit": 2,
+				"order_bys": "!progress"
+			}))?;
+			let taskprogresses = TaskProgressBmc::list(
+				&ctx,
+				&mm,
+				Some(vec![filter]),
+				Some(list_options),
+			)
+			.await?;
+
+			// -- Check
+			let progresses: Vec<i32> =
+				taskprogresses.iter().map(|t| t.progress).collect();
+			assert_eq!(progresses.len(), 2);
+			assert_eq!(&progresses, &[90, 50]);
+		}
 
 		// -- Cleanup
 		// Will delete associated tasks
@@ -302,29 +325,34 @@ mod tests {
 		let mm = _dev_utils::init_test().await;
 		let ctx = Ctx::root_ctx();
 		let fx_title = "test_update_ok - task 01";
-		let fx_title_new = "test_update_ok - task 01 - new";
+		let fx_progress = 15;
+		let fx_progress_new = 16;
 		let fx_project_id =
 			_dev_utils::seed_project(&ctx, &mm, "test_update_ok project for task")
 				.await?;
-		let fx_task = _dev_utils::seed_tasks(&ctx, &mm, fx_project_id, &[fx_title])
-			.await?
-			.remove(0);
+		let fx_task =
+			_dev_utils::seed_task(&ctx, &mm, fx_project_id, fx_title).await?;
+		let fx_taskprogress =
+			_dev_utils::seed_taskprogresses(&ctx, &mm, fx_task, &[fx_progress])
+				.await?
+				.remove(0);
 
 		// -- Exec
 		TaskProgressBmc::update(
 			&ctx,
 			&mm,
-			fx_task.id,
+			fx_taskprogress.id,
 			TaskProgressForUpdate {
-				title: Some(fx_title_new.to_string()),
+				progress: fx_progress_new,
 				..Default::default()
 			},
 		)
-			.await?;
+		.await?;
 
 		// -- Check
-		let task = TaskProgressBmc::get(&ctx, &mm, fx_task.id).await?;
-		assert_eq!(task.title, fx_title_new);
+		let taskprogress =
+			TaskProgressBmc::get(&ctx, &mm, fx_taskprogress.id).await?;
+		assert_eq!(taskprogress.progress, fx_progress_new);
 
 		// -- Clean
 		ProjectBmc::delete(&ctx, &mm, fx_project_id).await?;
@@ -343,31 +371,39 @@ mod tests {
 			&mm,
 			"project for tasks test_list_by_ctime_ok",
 		)
-			.await?;
-		let fx_titles_01 = &[
+		.await?;
+		let fx_task_id = _dev_utils::seed_task(
+			&ctx,
+			&mm,
+			fx_project_id,
 			"test_list_by_ctime_ok 01.1",
-			"test_list_by_ctime_ok 01.2",
-			"test_list_by_ctime_ok 01.3",
-		];
-		_dev_utils::seed_tasks(&ctx, &mm, fx_project_id, fx_titles_01).await?;
+		)
+		.await?;
+		let fx_progress_01 = &[23];
+		let fx_progress_02 = &[33, 45];
+
+		_dev_utils::seed_taskprogresses(&ctx, &mm, fx_task_id, fx_progress_01)
+			.await?;
 
 		let time_marker = format_time(now_utc());
 		sleep(Duration::from_millis(300)).await;
-		let fx_titles_02 =
-			&["test_list_by_ctime_ok 02.1", "test_list_by_ctime_ok 02.2"];
-		_dev_utils::seed_tasks(&ctx, &mm, fx_project_id, fx_titles_02).await?;
+
+		_dev_utils::seed_taskprogresses(&ctx, &mm, fx_task_id, fx_progress_02)
+			.await?;
 
 		// -- Exec
 		let filter_json = json! ({
 			"ctime": {"$gt": time_marker}, // time in Rfc3339
 		});
 		let filter = vec![serde_json::from_value(filter_json)?];
-		let tasks = TaskProgressBmc::list(&ctx, &mm, Some(filter), None).await?;
+		let taskprogresses =
+			TaskProgressBmc::list(&ctx, &mm, Some(filter), None).await?;
 
 		// -- Check
-		let titles: Vec<String> = tasks.into_iter().map(|t| t.title).collect();
-		assert_eq!(titles.len(), 2);
-		assert_eq!(&titles, fx_titles_02);
+		let progresses: Vec<i32> =
+			taskprogresses.into_iter().map(|t| t.progress).collect();
+		assert_eq!(progresses.len(), 2);
+		assert_eq!(&progresses, fx_progress_02);
 
 		// -- Cleanup
 		ProjectBmc::delete(&ctx, &mm, fx_project_id).await?;
@@ -391,7 +427,7 @@ mod tests {
 			matches!(
 				res,
 				Err(Error::EntityNotFound {
-					entity: "task",
+					entity: "taskprogress",
 					id: 100
 				})
 			),
