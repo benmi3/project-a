@@ -261,10 +261,11 @@ mod tests {
 		)
 			.await?;
 		_dev_utils::seed_tasks(&ctx, &mm, fx_project_id, fx_titles).await?;
+		let fx_task_ids = _dev_utils::seed_tasks(&ctx, &mm, fx_project_id, fx_titles).await?;
 
 		// -- Exec
-		let filter: TaskFilter = TaskFilter {
-			project_id: Some(fx_project_id.into()),
+		let filter: TaskProgressFilter = TaskProgressFilter {
+			task_id: Some(fx_task_id.into()),
 			..Default::default()
 		};
 		let list_options: ListOptions = serde_json::from_value(json! ({
@@ -273,8 +274,8 @@ mod tests {
 			"order_bys": "!title"
 		}))?;
 		let tasks =
-			TaskBmc::list(&ctx, &mm, Some(vec![filter]), Some(list_options)).await?;
-
+			TaskProgressBmc::list(&ctx, &mm, Some(vec![filter]), Some(list_options)).await?;
+			
 		// -- Check
 		let titles: Vec<String> =
 			tasks.iter().map(|t| t.title.to_string()).collect();
@@ -310,11 +311,11 @@ mod tests {
 			.remove(0);
 
 		// -- Exec
-		TaskBmc::update(
+		TaskProgressBmc::update(
 			&ctx,
 			&mm,
 			fx_task.id,
-			TaskForUpdate {
+			TaskProgressForUpdate {
 				title: Some(fx_title_new.to_string()),
 				..Default::default()
 			},
@@ -322,7 +323,7 @@ mod tests {
 			.await?;
 
 		// -- Check
-		let task = TaskBmc::get(&ctx, &mm, fx_task.id).await?;
+		let task = TaskProgressBmc::get(&ctx, &mm, fx_task.id).await?;
 		assert_eq!(task.title, fx_title_new);
 
 		// -- Clean
@@ -361,7 +362,7 @@ mod tests {
 			"ctime": {"$gt": time_marker}, // time in Rfc3339
 		});
 		let filter = vec![serde_json::from_value(filter_json)?];
-		let tasks = TaskBmc::list(&ctx, &mm, Some(filter), None).await?;
+		let tasks = TaskProgressBmc::list(&ctx, &mm, Some(filter), None).await?;
 
 		// -- Check
 		let titles: Vec<String> = tasks.into_iter().map(|t| t.title).collect();
@@ -383,7 +384,7 @@ mod tests {
 		let fx_id = 100;
 
 		// -- Exec
-		let res = TaskBmc::delete(&ctx, &mm, fx_id).await;
+		let res = TaskProgressBmc::delete(&ctx, &mm, fx_id).await;
 
 		// -- Check
 		assert!(
