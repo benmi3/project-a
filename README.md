@@ -40,7 +40,10 @@ The main goal is to learn on the way, so getting some guidance on the way is app
 - [turi getting started](https://tauri.app/v1/guides/getting-started/setup/next-js)
 - [bun quicksart](https://bun.sh/docs/quickstart)
 
+---
 
+# Simple temp frontend
+- [This got me along way](https://github.com/Bechma/todo-axum-askama-htmx/tree/main)
 
 ---
 
