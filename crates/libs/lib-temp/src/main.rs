@@ -1,9 +1,20 @@
+struct BaseSetting {
+    page_title: String,
+    page_name: String,
+}
+
 #[derive(askama::Template)]
 #[template(path = "index.html")]
 struct IndexTemplate {
-    page_title: String,
+    BaseSettings: BaseSetting,
 }
 
 async fn index() -> Result<IndexTemplate, (axum::http::StatusCode, String)> {
-    IndexTemplate
+    base = BaseSettings {
+            page_title: "Index",
+            page_name: "Index",
+        };
+    IndexTemplate {
+        BaseSettings: base,
+    }
 }
