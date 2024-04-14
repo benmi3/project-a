@@ -1,6 +1,12 @@
 use lib_utils::envs::get_env;
 use std::sync::OnceLock;
 
+
+pub struct BaseSettings {
+    pub page_title: String,
+    pub page_name: String,
+}
+
 pub fn front_config() -> &'static FrontConfig {
 	static INSTANCE: OnceLock<FrontConfig> = OnceLock::new();
 

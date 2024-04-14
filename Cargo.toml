@@ -10,7 +10,7 @@ members = [
     "crates/libs/lib-rpc", # e.g., rpc routing.
     "crates/libs/lib-auth", # e.g., for pwd, token.
     "crates/libs/lib-core", # e.g., model, ctx, config.
-    "crates/libs/lib-temp", # e.g., simple frontend
+#    "crates/libs/lib-temp", # e.g., simple frontend
 
     # -- Application Services
     "crates/services/web-server",
