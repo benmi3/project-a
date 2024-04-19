@@ -103,7 +103,7 @@ pub async fn seed_task(
 pub async fn seed_timerecords(
 	ctx: &Ctx,
 	mm: &ModelManager,
-	project_id: i64,
+	task_id: i64,
 	places: &[&str],
 ) -> model::Result<Vec<TimeRecord>> {
 	let mut timerecords = Vec::new();
@@ -113,7 +113,7 @@ pub async fn seed_timerecords(
 			ctx,
 			mm,
 			TimeRecordForCreate {
-				project_id,
+				task_id,
 				place: place.to_string(),
 				start_time: now_utc(),
 				stop_time: now_utc(),

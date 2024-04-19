@@ -40,7 +40,6 @@ pub struct TaskProgressForCreate {
 
 #[derive(Fields, Deserialize, Default)]
 pub struct TaskProgressForUpdate {
-	pub task_id: i64,
 	pub progress: i32,
 }
 
@@ -324,16 +323,17 @@ mod tests {
 		// -- Setup & Fixtures
 		let mm = _dev_utils::init_test().await;
 		let ctx = Ctx::root_ctx();
-		let fx_title = "test_update_ok - task 01";
 		let fx_progress = 15;
 		let fx_progress_new = 16;
 		let fx_project_id =
-			_dev_utils::seed_project(&ctx, &mm, "test_update_ok project for task")
+			_dev_utils::seed_project(&ctx, &mm, "test_update_ok project for taskprogress")
 				.await?;
-		let fx_task =
-			_dev_utils::seed_task(&ctx, &mm, fx_project_id, fx_title).await?;
+		let fx_task_id =
+			_dev_utils::seed_task(&ctx, &mm, fx_project_id, "test_update_ok - task 01 for taskprogress")
+				.await?;
+
 		let fx_taskprogress =
-			_dev_utils::seed_taskprogresses(&ctx, &mm, fx_task, &[fx_progress])
+			_dev_utils::seed_taskprogresses(&ctx, &mm, fx_task_id, &[fx_progress])
 				.await?
 				.remove(0);
 
@@ -352,6 +352,7 @@ mod tests {
 		// -- Check
 		let taskprogress =
 			TaskProgressBmc::get(&ctx, &mm, fx_taskprogress.id).await?;
+
 		assert_eq!(taskprogress.progress, fx_progress_new);
 
 		// -- Clean

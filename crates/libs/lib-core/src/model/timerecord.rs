@@ -18,7 +18,7 @@ use sqlx::FromRow;
 #[derive(Debug, Clone, Fields, FromRow, Serialize)]
 pub struct TimeRecord {
 	pub id: i64,
-	pub project_id: i64,
+	pub task_id: i64,
 
 	pub place: String,
 	#[serde_as(as = "Rfc3339")]
@@ -39,7 +39,7 @@ pub struct TimeRecord {
 
 #[derive(Fields, Deserialize)]
 pub struct TimeRecordForCreate {
-	pub project_id: i64,
+	pub task_id: i64,
 	pub place: String,
 	pub start_time: OffsetDateTime,
 	pub stop_time: OffsetDateTime,
@@ -55,7 +55,7 @@ pub struct TimeRecordForUpdate {
 #[derive(FilterNodes, Deserialize, Default, Debug)]
 pub struct TimeRecordFilter {
 	id: Option<OpValsInt64>,
-	project_id: Option<OpValsInt64>,
+	task_id: Option<OpValsInt64>,
 	place: Option<OpValsString>,
 	#[modql(to_sea_value_fn = "time_to_sea_value")]
 	start_time: Option<OpValsValue>,
@@ -140,10 +140,13 @@ mod tests {
 		let fx_project_id =
 			_dev_utils::seed_project(&ctx, &mm, "test_create_ok project for time record ")
 				.await?;
+		let fx_task_id = 
+		        _dev_utils::seed_task(&ctx, &mm, fx_project_id, "test_create_ok task for time record ")
+				.await?;
 
 		// -- Exec
 		let timerecord_c = TimeRecordForCreate {
-			project_id: fx_project_id,
+			task_id: fx_task_id,
 			place: fx_place.to_string(),
 			start_time: now_utc(),
 			stop_time: now_utc(),
@@ -196,11 +199,15 @@ mod tests {
 		let fx_project_id =
 			_dev_utils::seed_project(&ctx, &mm, "test_list_all_ok project for timerecord")
 				.await?;
-		_dev_utils::seed_timerecords(&ctx, &mm, fx_project_id, fx_titles).await?;
+		let fx_task_id =
+			_dev_utils::seed_task(&ctx, &mm, fx_project_id, "test_create_ok task for time record ")
+				.await?;
+
+		_dev_utils::seed_timerecords(&ctx, &mm, fx_task_id, fx_titles).await?;
 
 		// -- Exec
 		let filter = TimeRecordFilter {
-			project_id: Some(fx_project_id.into()),
+			task_id: Some(fx_task_id.into()),
 			..Default::default()
 		};
 		let timerecords = TimeRecordBmc::list(&ctx, &mm, Some(vec![filter]), None).await?;
@@ -231,11 +238,15 @@ mod tests {
 			"test_list_by_title_contains_ok project for timerecords ",
 		)
 		.await?;
-		_dev_utils::seed_timerecords(&ctx, &mm, fx_project_id, fx_places).await?;
+		let fx_task_id = 
+			_dev_utils::seed_task(&ctx, &mm, fx_project_id, "test_list_by_progress_contains_ok task for timerecords")
+				.await?;
+
+		_dev_utils::seed_timerecords(&ctx, &mm, fx_task_id, fx_places).await?;
 
 		// -- Exec
 		let filter = TimeRecordFilter {
-			project_id: Some(fx_project_id.into()),
+			task_id: Some(fx_task_id.into()),
 			place: Some(
 				OpValString::Contains("by_place_contains_ok place02".to_string()).into(),
 			),
@@ -269,11 +280,16 @@ mod tests {
 			"test_list_with_list_options_ok project for timerecord ",
 		)
 		.await?;
-		_dev_utils::seed_timerecords(&ctx, &mm, fx_project_id, fx_places).await?;
+
+		let fx_task_id = 
+			_dev_utils::seed_task(&ctx, &mm, fx_project_id, "test_list_with_list_options_ok task for timerecord")
+				.await?;
+
+		_dev_utils::seed_timerecords(&ctx, &mm, fx_task_id, fx_places).await?;
 
 		// -- Exec
 		let filter: TimeRecordFilter = TimeRecordFilter {
-			project_id: Some(fx_project_id.into()),
+			task_id: Some(fx_task_id.into()),
 			..Default::default()
 		};
 		let list_options: ListOptions = serde_json::from_value(json! ({
@@ -314,7 +330,11 @@ mod tests {
 		let fx_project_id =
 			_dev_utils::seed_project(&ctx, &mm, "test_update_ok project for timerecord")
 				.await?;
-		let fx_timerecord = _dev_utils::seed_timerecords(&ctx, &mm, fx_project_id, &[fx_place])
+		let fx_task_id =
+			_dev_utils::seed_task(&ctx, &mm, fx_project_id, "test_update_ok task for timerecord")
+				.await?;
+
+		let fx_timerecord = _dev_utils::seed_timerecords(&ctx, &mm, fx_task_id, &[fx_place])
 			.await?
 			.remove(0);
 
@@ -349,21 +369,26 @@ mod tests {
 		let fx_project_id = _dev_utils::seed_project(
 			&ctx,
 			&mm,
-			"project for tasks test_list_by_ctime_ok",
+			"project for timerecord test_list_by_ctime_ok",
 		)
 		.await?;
+
+		let fx_task_id =
+			_dev_utils::seed_task(&ctx, &mm, fx_project_id, "task for timerecord test_list_by_ctime_ok")
+				.await?;
+
 		let fx_places_01 = &[
 			"test_list_by_ctime_ok 01.1",
 			"test_list_by_ctime_ok 01.2",
 			"test_list_by_ctime_ok 01.3",
 		];
-		_dev_utils::seed_timerecords(&ctx, &mm, fx_project_id, fx_places_01).await?;
+		_dev_utils::seed_timerecords(&ctx, &mm, fx_task_id, fx_places_01).await?;
 
 		let time_marker = format_time(now_utc());
 		sleep(Duration::from_millis(300)).await;
 		let fx_places_02 =
 			&["test_list_by_ctime_ok 02.1", "test_list_by_ctime_ok 02.2"];
-		_dev_utils::seed_timerecords(&ctx, &mm, fx_project_id, fx_places_02).await?;
+		_dev_utils::seed_timerecords(&ctx, &mm, fx_task_id, fx_places_02).await?;
 
 		// -- Exec
 		let filter_json = json! ({
