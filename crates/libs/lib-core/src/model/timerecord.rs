@@ -26,7 +26,6 @@ pub struct TimeRecord {
 	#[serde_as(as = "Rfc3339")]
 	pub stop_time: OffsetDateTime,
 
-
 	// -- Timestamps
 	//    (creator and last modified user_id/time)
 	pub cid: i64,
@@ -37,18 +36,24 @@ pub struct TimeRecord {
 	pub mtime: OffsetDateTime,
 }
 
+#[serde_as]
 #[derive(Fields, Deserialize)]
 pub struct TimeRecordForCreate {
 	pub task_id: i64,
 	pub place: String,
-	pub start_time: OffsetDateTime,
-	pub stop_time: OffsetDateTime,
+	#[serde_as(as = "Option<Rfc3339>")]
+	pub start_time: Option<OffsetDateTime>,
+	#[serde_as(as = "Option<Rfc3339>")]
+	pub stop_time: Option<OffsetDateTime>,
 }
 
+#[serde_as]
 #[derive(Fields, Deserialize, Default)]
 pub struct TimeRecordForUpdate {
 	pub place: Option<String>,
+	#[serde_as(as = "Option<Rfc3339>")]
 	pub start_time: Option<OffsetDateTime>,
+	#[serde_as(as = "Option<Rfc3339>")]
 	pub stop_time: Option<OffsetDateTime>,
 }
 
@@ -115,6 +120,17 @@ impl TimeRecordBmc {
 }
 // endregion: --- TimeRecordBmc
 
+// region: --- TimeRecordPreFormat
+#[derive(Fields, Deserialize)]
+pub struct TimeRecordForCreatePre {
+	pub task_id: i64,
+	pub place: String,
+	pub start_time: String,
+	pub stop_time: String,
+}
+
+// endregion: --- TimeRecordPreFormat
+
 // region:    --- Tests
 #[cfg(test)]
 mod tests {
@@ -137,19 +153,26 @@ mod tests {
 		let mm = _dev_utils::init_test().await;
 		let ctx = Ctx::root_ctx();
 		let fx_place = "test_create_ok place";
-		let fx_project_id =
-			_dev_utils::seed_project(&ctx, &mm, "test_create_ok project for time record ")
-				.await?;
-		let fx_task_id = 
-		        _dev_utils::seed_task(&ctx, &mm, fx_project_id, "test_create_ok task for time record ")
-				.await?;
+		let fx_project_id = _dev_utils::seed_project(
+			&ctx,
+			&mm,
+			"test_create_ok project for time record ",
+		)
+		.await?;
+		let fx_task_id = _dev_utils::seed_task(
+			&ctx,
+			&mm,
+			fx_project_id,
+			"test_create_ok task for time record ",
+		)
+		.await?;
 
 		// -- Exec
 		let timerecord_c = TimeRecordForCreate {
 			task_id: fx_task_id,
 			place: fx_place.to_string(),
-			start_time: now_utc(),
-			stop_time: now_utc(),
+			start_time: Some(now_utc()),
+			stop_time: Some(now_utc()),
 		};
 		let id = TimeRecordBmc::create(&ctx, &mm, timerecord_c).await?;
 
@@ -195,13 +218,23 @@ mod tests {
 		// -- Setup & Fixtures
 		let mm = _dev_utils::init_test().await;
 		let ctx = Ctx::root_ctx();
-		let fx_titles = &["test_list_all_ok-timerecord 01", "test_list_all_ok-timerecord 02"];
-		let fx_project_id =
-			_dev_utils::seed_project(&ctx, &mm, "test_list_all_ok project for timerecord")
-				.await?;
-		let fx_task_id =
-			_dev_utils::seed_task(&ctx, &mm, fx_project_id, "test_create_ok task for time record ")
-				.await?;
+		let fx_titles = &[
+			"test_list_all_ok-timerecord 01",
+			"test_list_all_ok-timerecord 02",
+		];
+		let fx_project_id = _dev_utils::seed_project(
+			&ctx,
+			&mm,
+			"test_list_all_ok project for timerecord",
+		)
+		.await?;
+		let fx_task_id = _dev_utils::seed_task(
+			&ctx,
+			&mm,
+			fx_project_id,
+			"test_create_ok task for time record ",
+		)
+		.await?;
 
 		_dev_utils::seed_timerecords(&ctx, &mm, fx_task_id, fx_titles).await?;
 
@@ -210,7 +243,8 @@ mod tests {
 			task_id: Some(fx_task_id.into()),
 			..Default::default()
 		};
-		let timerecords = TimeRecordBmc::list(&ctx, &mm, Some(vec![filter]), None).await?;
+		let timerecords =
+			TimeRecordBmc::list(&ctx, &mm, Some(vec![filter]), None).await?;
 
 		// -- Check
 		assert_eq!(timerecords.len(), 2, "number of seeded timerecords.");
@@ -238,9 +272,13 @@ mod tests {
 			"test_list_by_title_contains_ok project for timerecords ",
 		)
 		.await?;
-		let fx_task_id = 
-			_dev_utils::seed_task(&ctx, &mm, fx_project_id, "test_list_by_progress_contains_ok task for timerecords")
-				.await?;
+		let fx_task_id = _dev_utils::seed_task(
+			&ctx,
+			&mm,
+			fx_project_id,
+			"test_list_by_progress_contains_ok task for timerecords",
+		)
+		.await?;
 
 		_dev_utils::seed_timerecords(&ctx, &mm, fx_task_id, fx_places).await?;
 
@@ -248,11 +286,13 @@ mod tests {
 		let filter = TimeRecordFilter {
 			task_id: Some(fx_task_id.into()),
 			place: Some(
-				OpValString::Contains("by_place_contains_ok place02".to_string()).into(),
+				OpValString::Contains("by_place_contains_ok place02".to_string())
+					.into(),
 			),
 			..Default::default()
 		};
-		let timerecords = TimeRecordBmc::list(&ctx, &mm, Some(vec![filter]), None).await?;
+		let timerecords =
+			TimeRecordBmc::list(&ctx, &mm, Some(vec![filter]), None).await?;
 
 		// -- Check
 		assert_eq!(timerecords.len(), 2);
@@ -281,9 +321,13 @@ mod tests {
 		)
 		.await?;
 
-		let fx_task_id = 
-			_dev_utils::seed_task(&ctx, &mm, fx_project_id, "test_list_with_list_options_ok task for timerecord")
-				.await?;
+		let fx_task_id = _dev_utils::seed_task(
+			&ctx,
+			&mm,
+			fx_project_id,
+			"test_list_with_list_options_ok task for timerecord",
+		)
+		.await?;
 
 		_dev_utils::seed_timerecords(&ctx, &mm, fx_task_id, fx_places).await?;
 
@@ -298,7 +342,8 @@ mod tests {
 			"order_bys": "!place"
 		}))?;
 		let timerecords =
-			TimeRecordBmc::list(&ctx, &mm, Some(vec![filter]), Some(list_options)).await?;
+			TimeRecordBmc::list(&ctx, &mm, Some(vec![filter]), Some(list_options))
+				.await?;
 
 		// -- Check
 		let places: Vec<String> =
@@ -327,16 +372,24 @@ mod tests {
 		let ctx = Ctx::root_ctx();
 		let fx_place = "test_update_ok - place 01";
 		let fx_place_new = "test_update_ok - place 01 - new";
-		let fx_project_id =
-			_dev_utils::seed_project(&ctx, &mm, "test_update_ok project for timerecord")
-				.await?;
-		let fx_task_id =
-			_dev_utils::seed_task(&ctx, &mm, fx_project_id, "test_update_ok task for timerecord")
-				.await?;
+		let fx_project_id = _dev_utils::seed_project(
+			&ctx,
+			&mm,
+			"test_update_ok project for timerecord",
+		)
+		.await?;
+		let fx_task_id = _dev_utils::seed_task(
+			&ctx,
+			&mm,
+			fx_project_id,
+			"test_update_ok task for timerecord",
+		)
+		.await?;
 
-		let fx_timerecord = _dev_utils::seed_timerecords(&ctx, &mm, fx_task_id, &[fx_place])
-			.await?
-			.remove(0);
+		let fx_timerecord =
+			_dev_utils::seed_timerecords(&ctx, &mm, fx_task_id, &[fx_place])
+				.await?
+				.remove(0);
 
 		// -- Exec
 		TimeRecordBmc::update(
@@ -373,9 +426,13 @@ mod tests {
 		)
 		.await?;
 
-		let fx_task_id =
-			_dev_utils::seed_task(&ctx, &mm, fx_project_id, "task for timerecord test_list_by_ctime_ok")
-				.await?;
+		let fx_task_id = _dev_utils::seed_task(
+			&ctx,
+			&mm,
+			fx_project_id,
+			"task for timerecord test_list_by_ctime_ok",
+		)
+		.await?;
 
 		let fx_places_01 = &[
 			"test_list_by_ctime_ok 01.1",

@@ -5,12 +5,14 @@ mod dev_db;
 use crate::ctx::Ctx;
 use crate::model::project::{ProjectBmc, ProjectForCreate};
 use crate::model::task::{Task, TaskBmc, TaskForCreate};
-use crate::model::taskprogress::{TaskProgress, TaskProgressBmc, TaskProgressForCreate};
+use crate::model::taskprogress::{
+	TaskProgress, TaskProgressBmc, TaskProgressForCreate,
+};
 use crate::model::timerecord::{TimeRecord, TimeRecordBmc, TimeRecordForCreate};
 use crate::model::{self, ModelManager};
+use lib_utils::time::now_utc;
 use tokio::sync::OnceCell;
 use tracing::info;
-use lib_utils::time::now_utc;
 
 // endregion: --- Modules
 
@@ -115,11 +117,11 @@ pub async fn seed_timerecords(
 			TimeRecordForCreate {
 				task_id,
 				place: place.to_string(),
-				start_time: now_utc(),
-				stop_time: now_utc(),
+				start_time: Some(now_utc()),
+				stop_time: Some(now_utc()),
 			},
 		)
-			.await?;
+		.await?;
 		let timerecord = TimeRecordBmc::get(ctx, mm, id).await?;
 
 		timerecords.push(timerecord);

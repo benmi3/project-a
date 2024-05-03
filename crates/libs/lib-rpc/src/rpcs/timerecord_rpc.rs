@@ -4,7 +4,8 @@ use crate::Result;
 use crate::{ParamsForCreate, ParamsForUpdate, ParamsIded, ParamsList};
 use lib_core::ctx::Ctx;
 use lib_core::model::timerecord::{
-	TimeRecord, TimeRecordBmc, TimeRecordFilter, TimeRecordForCreate, TimeRecordForUpdate,
+	TimeRecord, TimeRecordBmc, TimeRecordFilter, TimeRecordForCreate,
+	TimeRecordForUpdate,
 };
 use lib_core::model::ModelManager;
 
@@ -12,7 +13,7 @@ pub fn rpc_router() -> RpcRouter {
 	rpc_router!(
 		// Same as RpcRouter::new().add...
 		create_timerecord,
-		list_timerecord,
+		list_timerecords,
 		update_timerecord,
 		delete_timerecord,
 	)
@@ -31,7 +32,7 @@ pub async fn create_timerecord(
 	Ok(timerecord)
 }
 
-pub async fn list_timerecord(
+pub async fn list_timerecords(
 	ctx: Ctx,
 	mm: ModelManager,
 	params: ParamsList<TimeRecordFilter>,
