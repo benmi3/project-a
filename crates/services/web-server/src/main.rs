@@ -16,6 +16,7 @@ use crate::web::{routes_login, routes_static};
 use axum::{middleware, Router};
 use lib_core::_dev_utils;
 use lib_core::model::ModelManager;
+use lib_utils::setup::check_setup;
 use tokio::net::TcpListener;
 use tower_cookies::CookieManagerLayer;
 use tracing::info;
@@ -32,7 +33,11 @@ async fn main() -> Result<()> {
 		.init();
 
 	// -- FOR DEV ONLY
-	_dev_utils::init_dev().await;
+	// TODO
+	// Make this more usefull
+	if check_setup() {
+		_dev_utils::init_dev().await;
+	}
 
 	// Initialize ModelManager.
 	let mm = ModelManager::new().await?;
