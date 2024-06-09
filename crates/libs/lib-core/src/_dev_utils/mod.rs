@@ -8,6 +8,7 @@ use crate::model::task::{Task, TaskBmc, TaskForCreate};
 use crate::model::taskprogress::{
 	TaskProgress, TaskProgressBmc, TaskProgressForCreate,
 };
+use crate::model::tasktime::{TaskTime, TaskTimeBmc, TaskTimeForCreate};
 use crate::model::timerecord::{TimeRecord, TimeRecordBmc, TimeRecordForCreate};
 use crate::model::{self, ModelManager};
 use lib_utils::time::now_utc;
@@ -105,7 +106,6 @@ pub async fn seed_task(
 pub async fn seed_timerecords(
 	ctx: &Ctx,
 	mm: &ModelManager,
-	task_id: i64,
 	places: &[&str],
 ) -> model::Result<Vec<TimeRecord>> {
 	let mut timerecords = Vec::new();
@@ -115,7 +115,6 @@ pub async fn seed_timerecords(
 			ctx,
 			mm,
 			TimeRecordForCreate {
-				task_id,
 				place: place.to_string(),
 				start_time: Some(now_utc()),
 				stop_time: Some(now_utc()),
@@ -128,6 +127,34 @@ pub async fn seed_timerecords(
 	}
 
 	Ok(timerecords)
+}
+
+pub async fn seed_tasktimes(
+	ctx: &Ctx,
+	mm: &ModelManager,
+	task_id: i64,
+	comments: &[&str],
+) -> model::Result<Vec<TaskTime>> {
+	let mut tasktimes = Vec::new();
+
+	for comment in comments {
+		let id = TaskTimeBmc::create(
+			ctx,
+			mm,
+			TaskTimeForCreate {
+				task_id,
+				comment: comment.to_string(),
+				start_time: Some(now_utc()),
+				stop_time: Some(now_utc()),
+			},
+		)
+		.await?;
+		let tasktime = TaskTimeBmc::get(ctx, mm, id).await?;
+
+		tasktimes.push(tasktime);
+	}
+
+	Ok(tasktimes)
 }
 
 pub async fn seed_taskprogresses(

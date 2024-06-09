@@ -325,12 +325,19 @@ mod tests {
 		let ctx = Ctx::root_ctx();
 		let fx_progress = 15;
 		let fx_progress_new = 16;
-		let fx_project_id =
-			_dev_utils::seed_project(&ctx, &mm, "test_update_ok project for taskprogress")
-				.await?;
-		let fx_task_id =
-			_dev_utils::seed_task(&ctx, &mm, fx_project_id, "test_update_ok - task 01 for taskprogress")
-				.await?;
+		let fx_project_id = _dev_utils::seed_project(
+			&ctx,
+			&mm,
+			"test_update_ok project for taskprogress",
+		)
+		.await?;
+		let fx_task_id = _dev_utils::seed_task(
+			&ctx,
+			&mm,
+			fx_project_id,
+			"test_update_ok - task 01 for taskprogress",
+		)
+		.await?;
 
 		let fx_taskprogress =
 			_dev_utils::seed_taskprogresses(&ctx, &mm, fx_task_id, &[fx_progress])
