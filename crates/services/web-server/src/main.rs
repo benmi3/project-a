@@ -13,12 +13,16 @@ use crate::web::mw_res_map::mw_reponse_map;
 use crate::web::mw_stamp::mw_req_stamp;
 use crate::web::routes_rpc::RpcState;
 use crate::web::{routes_login, routes_static};
-use axum::{middleware, Router};
+use axum::{
+	http::{HeaderValue, Method},
+	middleware, Router,
+};
 use lib_core::_dev_utils;
 use lib_core::model::ModelManager;
 use lib_utils::setup::check_setup;
 use tokio::net::TcpListener;
 use tower_cookies::CookieManagerLayer;
+use tower_http::cors::{Any, CorsLayer}; // Needed for preflight
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 
@@ -47,6 +51,12 @@ async fn main() -> Result<()> {
 	let routes_rpc = web::routes_rpc::routes(rpc_state)
 		.route_layer(middleware::from_fn(mw_ctx_require));
 
+	let cors_check = CorsLayer::new()
+		//.allow_origin("http://localhost:5173".parse::<HeaderValue>().unwrap())
+		.allow_origin(Any) // For Testing
+		.allow_headers(Any) // FOr Testing
+		.allow_methods([Method::POST, Method::OPTIONS]);
+
 	let routes_all = Router::new()
 		.merge(routes_login::routes(mm.clone()))
 		.nest("/api", routes_rpc)
@@ -54,6 +64,7 @@ async fn main() -> Result<()> {
 		.layer(middleware::from_fn_with_state(mm.clone(), mw_ctx_resolve))
 		.layer(middleware::from_fn(mw_req_stamp))
 		.layer(CookieManagerLayer::new())
+		.layer(cors_check)
 		.fallback_service(routes_static::serve_dir());
 
 	// region:    --- Start Server

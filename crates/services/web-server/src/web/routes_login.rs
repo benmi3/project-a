@@ -9,8 +9,8 @@ use lib_core::model::ModelManager;
 use serde::Deserialize;
 use serde_json::{json, Value};
 use tower_cookies::Cookies;
-use tracing::debug;
-
+use tracing::debug; // Needed for preflight
+					//
 pub fn routes(mm: ModelManager) -> Router {
 	Router::new()
 		.route("/api/login", post(api_login_handler))
