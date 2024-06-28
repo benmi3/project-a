@@ -1,3 +1,0 @@
-[submodule "crates/services/project-a-front"]
-	path = crates/services/project-a-front
-	url = git@github.com:benmi3/project-a-front.git
